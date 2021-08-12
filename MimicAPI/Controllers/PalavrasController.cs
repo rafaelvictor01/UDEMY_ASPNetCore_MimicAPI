@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MimicAPI.Database;
+using System.Linq;
 
 namespace MimicAPI.Controllers
 {
@@ -23,8 +25,8 @@ namespace MimicAPI.Controllers
         [Route("{Id}")]
         public ActionResult Obter(int Id)
         {
-            var palavra = _banco.palavras.Find(Id);
-            return palavra != null ? new JsonResult(palavra) : NotFound();
+            var objPalavra = _banco.palavras.Find(Id);
+            return objPalavra != null ? new JsonResult(objPalavra) : NotFound();
         }
 
         [HttpPost]
@@ -33,27 +35,41 @@ namespace MimicAPI.Controllers
         {
             _banco.palavras.Add(palavra);
             _banco.SaveChanges();
-            return Ok();
+            return Created($"/palavras/{palavra.Id}", palavra);
         }
 
         [HttpPut]
-        [Route("")]
-        public ActionResult Atualizar([FromBody] Models.Palavra palavra)
+        [Route("{Id}")]
+        public ActionResult Atualizar(int Id, [FromBody] Models.Palavra palavra)
         {
+            var objPalavra = _banco.palavras.AsNoTracking().FirstOrDefault(item => item.Id == Id);
+
+            if (objPalavra == null)
+            {
+                return NotFound();
+            }
+
+            palavra.Id = Id;
             _banco.palavras.Update(palavra);
             _banco.SaveChanges();
-            return Ok();
+            return new JsonResult(palavra);
         }
 
         [HttpDelete]
         [Route("{Id}")]
         public ActionResult Remover(int Id)
         {
-            var palavra = _banco.palavras.Find(Id);
-            palavra.Ativo = false; 
-            _banco.palavras.Update(palavra);
+            var objPalavra = _banco.palavras.Find(Id);
+
+            if (objPalavra == null)
+            {
+                return NotFound();
+            }
+
+            objPalavra.Ativo = false; 
+            _banco.palavras.Update(objPalavra);
             _banco.SaveChanges();
-            return Ok();
+            return NoContent();
         }
     }
 }

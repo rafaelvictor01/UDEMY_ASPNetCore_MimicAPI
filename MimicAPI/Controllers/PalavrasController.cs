@@ -23,22 +23,25 @@ namespace MimicAPI.Controllers
         [Route("{Id}")]
         public ActionResult Obter(int Id)
         {
-            return new JsonResult(_banco.palavras.Find(Id));
+            var palavra = _banco.palavras.Find(Id);
+            return palavra != null ? new JsonResult(palavra) : NotFound();
         }
 
         [HttpPost]
         [Route("")]
-        public ActionResult Cadastrar(Models.Palavra palavra)
+        public ActionResult Cadastrar([FromBody] Models.Palavra palavra)
         {
             _banco.palavras.Add(palavra);
+            _banco.SaveChanges();
             return Ok();
         }
 
         [HttpPut]
         [Route("")]
-        public ActionResult Atualizar(Models.Palavra palavra)
+        public ActionResult Atualizar([FromBody] Models.Palavra palavra)
         {
             _banco.palavras.Update(palavra);
+            _banco.SaveChanges();
             return Ok();
         }
 
@@ -46,7 +49,10 @@ namespace MimicAPI.Controllers
         [Route("{Id}")]
         public ActionResult Remover(int Id)
         {
-            _banco.palavras.Remove(_banco.palavras.Find(Id));
+            var palavra = _banco.palavras.Find(Id);
+            palavra.Ativo = false; 
+            _banco.palavras.Update(palavra);
+            _banco.SaveChanges();
             return Ok();
         }
     }

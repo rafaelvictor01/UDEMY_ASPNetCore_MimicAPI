@@ -28,6 +28,7 @@ namespace MimicAPI
             }
 
             app.UseRouting();
+            app.UseStatusCodePages();
 
             app.UseEndpoints(endpoints =>
             {

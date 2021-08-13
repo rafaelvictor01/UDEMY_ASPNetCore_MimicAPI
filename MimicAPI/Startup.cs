@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MimicAPI.Database;
+using MimicAPI.Repositories;
+using MimicAPI.Repositories.Interfaces;
 
 namespace MimicAPI
 {
@@ -17,6 +19,7 @@ namespace MimicAPI
                 opt.UseSqlite("Data Source=Database\\Mimic.db");
             });
             services.AddMvc();
+            services.AddScoped<IPalavraRepository, PalavraRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

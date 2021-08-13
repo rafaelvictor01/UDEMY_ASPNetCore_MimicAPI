@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MimicAPI.Database;
+using MimicAPI.Utilitarios;
+using System;
 using System.Linq;
+using System.Text.Json;
 
 namespace MimicAPI.Controllers
 {
@@ -16,9 +19,39 @@ namespace MimicAPI.Controllers
 
         [HttpGet]
         [Route("")]
-        public IActionResult ObterTodas()
+        public IActionResult ObterTodas([FromQuery] PalavraUrlQuery queryParams)
         {
-            return new JsonResult(_banco.palavras);
+            var responsePalavras = _banco.palavras.AsQueryable();
+
+            if (queryParams.Data.HasValue)
+            {
+                responsePalavras = responsePalavras.Where(registroPalavra =>
+                    registroPalavra.Criacao > queryParams.Data.Value || registroPalavra.Atualizacao > queryParams.Data.Value
+                );
+            }
+
+            if (queryParams.PagAtual.HasValue)
+            {
+                var totalRegistros = responsePalavras.Count();
+                var paginacao = new Paginacao
+                {
+                    TotalRegistros = totalRegistros,
+                    TotalPaginas = (int)Math.Ceiling((decimal)(totalRegistros / queryParams.ItensPorPag))
+                };
+
+                responsePalavras = responsePalavras
+                    .Skip((queryParams.PagAtual.Value - 1) * queryParams.ItensPorPag.Value)
+                    .Take(queryParams.ItensPorPag.Value);
+
+                Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginacao));
+
+                if (queryParams.PagAtual > paginacao.TotalPaginas)
+                {
+                    return NotFound();
+                }
+
+            }
+            return new JsonResult(responsePalavras);
         }
 
         [HttpGet]
